@@ -1,9 +1,17 @@
-using System.Text.Json.Serialization;
 using Microsoft.OpenApi.Models;
+using System.Reflection;
+using System.Text.Json.Serialization;
+
 namespace AnubotBackend;
 
+/// <summary>
+/// 아누봇 메인 클래스
+/// </summary>
 public class Program
 {
+    /// <summary>
+    /// 애플리케이션의 진입점
+    /// </summary>
     public static void Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
@@ -29,7 +37,6 @@ public class Program
         });
 
         // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-        builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen(options =>
         {
             options.SwaggerDoc("v1", new OpenApiInfo
@@ -37,6 +44,9 @@ public class Program
                 Version = "v1",
                 Title = "Anubot Backend API",
             });
+
+            var xmlFileName = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+            options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFileName));
         });
 
         var app = builder.Build();
