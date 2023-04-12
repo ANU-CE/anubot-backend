@@ -4,17 +4,27 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace AnubotBackend.Controllers;
 
+/// <summary>
+/// 유저 컨트롤러
+/// </summary>
 [ApiController]
 [Route("[controller]")]
 public class UsersController : ControllerBase
 {
     private readonly Context _context;
 
+    /// <summary>
+    /// 유저 컨트롤러 생성자
+    /// </summary>
     public UsersController(Context context)
     {
         _context = context;
     }
 
+    /// <summary>
+    /// 유저 ID로 유저 개체를 가져옵니다.
+    /// </summary>
+    /// <param name="id"></param>
     [HttpGet("{id}")]
     public async Task<ActionResult<User>> Get(Guid id)
     {
@@ -27,6 +37,10 @@ public class UsersController : ControllerBase
         return user;
     }
 
+    /// <summary>
+    /// 유저 개체를 생성합니다.
+    /// </summary>
+    /// <param name="dto">유저 개체 생성 요청 DTO</param>
     [HttpPost]
     public async Task<ActionResult<User>> Create(CreateUserDto dto)
     {

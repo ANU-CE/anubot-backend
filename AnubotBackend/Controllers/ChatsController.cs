@@ -4,17 +4,28 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace AnubotBackend.Controllers;
 
+/// <summary>
+/// 대화 컨트롤러
+/// </summary>
 [ApiController]
 [Route("[controller]")]
 public class ChatsController : ControllerBase
 {
     private readonly Context _context;
 
+    /// <summary>
+    /// 컨트롤러 생성자
+    /// </summary>
+    /// <param name="context"></param>
     public ChatsController(Context context)
     {
         _context = context;
     }
 
+    /// <summary>
+    /// 대화 ID로 대화 개체를 가져옵니다.
+    /// </summary>
+    /// <param name="id">대화 ID</param>
     [HttpGet("{id}")]
     public async Task<ActionResult<Chat>> Get(Guid id)
     {
@@ -27,6 +38,10 @@ public class ChatsController : ControllerBase
         return chat;
     }
 
+    /// <summary>
+    /// 대화 개체를 생성합니다.
+    /// </summary>
+    /// <param name="dto">대화 개체 생성 요청 DTO</param>
     [HttpPost]
     public async Task<ActionResult<Chat>> Create(CreateChatDto dto)
     {
@@ -42,6 +57,11 @@ public class ChatsController : ControllerBase
         return CreatedAtAction(nameof(Get), new { id = chat.Id }, chat);
     }
 
+    /// <summary>
+    /// 대화 개체를 갱신합니다. 아누봇 응답에 대한 사용자 피드백을 전달할 수 있습니다.
+    /// </summary>
+    /// <param name="id">대화 ID</param>
+    /// <param name="dto">대화 개체 갱신 요청 DTO</param>
     [HttpPatch("{id}")]
     public async Task<ActionResult<Chat>> Update(Guid id, UpdateChatDto dto)
     {
