@@ -22,11 +22,6 @@ public class Chat
     public required string Reply { get; set; }
 
     /// <summary>
-    /// 메시지를 보낸 사용자의 ID
-    /// </summary>
-    public required Guid UserId { get; set; }
-
-    /// <summary>
     /// 메시지를 보낸 사용자
     /// </summary>
     public User User { get; set; } = null!;

@@ -1,6 +1,7 @@
 ﻿using AnubotBackend.Dto;
 using AnubotBackend.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace AnubotBackend.Controllers;
 
@@ -28,7 +29,10 @@ public class UsersController : ControllerBase
     [HttpGet("{id}")]
     public async Task<ActionResult<User>> Get(Guid id)
     {
-        User? user = await _context.Users.FindAsync(id);
+        User? user = await _context.Users
+            .Include(u => u.Chats)
+            .FirstOrDefaultAsync(u => u.Id == id);
+
         if (user == null)
         {
             return NotFound();
