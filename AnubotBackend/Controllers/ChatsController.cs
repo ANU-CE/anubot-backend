@@ -45,13 +45,20 @@ public class ChatsController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<Chat>> Create(CreateChatDto dto)
     {
+        User? user = _context.Find<User>(dto.UserId);
+        if (user == null)
+        {
+            return NotFound();
+        }
+
         var chat = new Chat()
         {
             Message = dto.Message,
             Reply = "example here!",
-            UserId = dto.UserId,
+            User = user,
             CreatedDateTime = DateTime.UtcNow
         };
+
         _context.Chats.Add(chat);
         await _context.SaveChangesAsync();
         return CreatedAtAction(nameof(Get), new { id = chat.Id }, chat);
