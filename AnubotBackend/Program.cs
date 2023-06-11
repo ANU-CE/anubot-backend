@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using System.Reflection;
 using System.Text.Json.Serialization;
@@ -16,8 +17,13 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
-        // Add services to the container.
-        builder.Services.AddDbContext<Context>();
+        builder.Services.AddDbContext<Context>(options =>
+        {
+            options.UseMySql(
+                connectionString: builder.Configuration.GetConnectionString("DefaultConnection"),
+                serverVersion: ServerVersion.AutoDetect(builder.Configuration.GetConnectionString("DefaultConnection")));
+        });
+
         builder.Services
             .AddControllers()
             .AddJsonOptions(options =>
@@ -26,7 +32,7 @@ public class Program
                 options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter(allowIntegerValues: false));
             });
 
-        // Add CORS
+        // CORS 관련 설정
         builder.Services.AddCors(options =>
         {
             options.AddDefaultPolicy(policy =>
@@ -63,7 +69,6 @@ public class Program
         app.UseHttpsRedirection();
 
         app.UseAuthorization();
-
 
         app.MapControllers();
 

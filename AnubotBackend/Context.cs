@@ -1,5 +1,4 @@
 ﻿using AnubotBackend.Models;
-using dotenv.net;
 using Microsoft.EntityFrameworkCore;
 
 namespace AnubotBackend;
@@ -11,20 +10,11 @@ namespace AnubotBackend;
 public class Context : DbContext
 {
     /// <summary>
-    /// Context 생성자.
+    /// DB Context 생성자
     /// </summary>
-    /// <param name="options"></param>
+    /// <param name="options">DB Context 생성에 필요한 옵션</param>
     public Context(DbContextOptions<Context> options) : base(options)
-    { }
-
-    /// <summary>
-    /// DbContext의 설정. Connection String을 설정합니다.
-    /// </summary>
-    /// <param name="optionsBuilder"></param>
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        DotEnv.Load();
-        optionsBuilder.UseSqlServer(Environment.GetEnvironmentVariable("DB_STRING"));
     }
 
     /// <summary>

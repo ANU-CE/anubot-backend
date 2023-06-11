@@ -2,6 +2,9 @@
 using AnubotBackend.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using OpenAI;
+using OpenAI.Managers;
+using OpenAI.ObjectModels.RequestModels;
 
 namespace AnubotBackend.Controllers;
 
@@ -12,15 +15,23 @@ namespace AnubotBackend.Controllers;
 [Route("[controller]")]
 public class ChatsController : ControllerBase
 {
+    private readonly OpenAIService _service;
     private readonly Context _context;
+    private readonly IConfiguration _configuration;
 
     /// <summary>
     /// 컨트롤러 생성자
     /// </summary>
     /// <param name="context"></param>
-    public ChatsController(Context context)
+    /// <param name="configuration"></param>
+    public ChatsController(Context context, IConfiguration configuration)
     {
         _context = context;
+        _configuration = configuration;
+        _service = new OpenAIService(new OpenAiOptions()
+        {
+            ApiKey = _configuration["OpenAI:ApiKey"] ?? throw new Exception("OpenAI:ApiKey is not set."),
+        });
     }
 
     /// <summary>
@@ -49,16 +60,30 @@ public class ChatsController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<Chat>> Create(CreateChatDto dto)
     {
-        User? user = _context.Find<User>(dto.UserId);
+        User? user = await _context.FindAsync<User>(dto.UserId);
         if (user == null)
         {
             return NotFound();
         }
 
+        var result = await _service.ChatCompletion.CreateCompletion(new ChatCompletionCreateRequest()
+        {
+            Model = "gpt-3.5-turbo",
+            Messages = new List<ChatMessage>()
+            {
+                ChatMessage.FromSystem("당신은 안동대학교 학생들의 질문에 대답해주는 아누봇입니다."),
+                ChatMessage.FromUser(dto.Message),
+            },
+        });
+        if (!result.Successful)
+        {
+            return StatusCode(500, result.Error);
+        }
+
         var chat = new Chat()
         {
             Message = dto.Message,
-            Reply = "example here!",
+            Reply = result.Choices.First().Message.Content,
             User = user,
             CreatedDateTime = DateTime.UtcNow
         };
