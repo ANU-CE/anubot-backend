@@ -363,4 +363,5 @@ MigrationBackup/
 FodyWeavers.xsd
 
 # appsettings
+/AnubotBackend/appsettings.Production.json
 /AnubotBackend/appsettings.Development.json
