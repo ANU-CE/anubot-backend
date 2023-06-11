@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
+using OpenAI;
+using OpenAI.Managers;
 using System.Reflection;
 using System.Text.Json.Serialization;
 
@@ -24,8 +26,14 @@ public class Program
                 serverVersion: ServerVersion.AutoDetect(builder.Configuration.GetConnectionString("DefaultConnection")));
         });
 
-        builder.Services
-            .AddControllers()
+        // OpenAI 서비스 객체 등록
+        builder.Services.AddSingleton(new OpenAIService(
+            new OpenAiOptions()
+            {
+                ApiKey = builder.Configuration["OpenAI:ApiKey"] ?? throw new Exception("OpenAI:ApiKey is not set."),
+            }));
+
+        builder.Services.AddControllers()
             .AddJsonOptions(options =>
             {
                 options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve;

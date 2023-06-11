@@ -2,7 +2,6 @@
 using AnubotBackend.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using OpenAI;
 using OpenAI.Managers;
 using OpenAI.ObjectModels.RequestModels;
 
@@ -17,21 +16,16 @@ public class ChatsController : ControllerBase
 {
     private readonly OpenAIService _service;
     private readonly Context _context;
-    private readonly IConfiguration _configuration;
 
     /// <summary>
     /// 컨트롤러 생성자
     /// </summary>
     /// <param name="context"></param>
-    /// <param name="configuration"></param>
-    public ChatsController(Context context, IConfiguration configuration)
+    /// <param name="service"></param>
+    public ChatsController(Context context, OpenAIService service)
     {
         _context = context;
-        _configuration = configuration;
-        _service = new OpenAIService(new OpenAiOptions()
-        {
-            ApiKey = _configuration["OpenAI:ApiKey"] ?? throw new Exception("OpenAI:ApiKey is not set."),
-        });
+        _service = service;
     }
 
     /// <summary>
