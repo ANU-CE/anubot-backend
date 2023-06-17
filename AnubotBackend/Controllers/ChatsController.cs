@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using OpenAI.Managers;
 using OpenAI.ObjectModels.RequestModels;
+using System.Text;
 
 namespace AnubotBackend.Controllers;
 
@@ -16,16 +17,19 @@ public class ChatsController : ControllerBase
 {
     private readonly OpenAIService _service;
     private readonly Context _context;
+    private readonly VectorRepository _vectorRepository;
 
     /// <summary>
     /// 컨트롤러 생성자
     /// </summary>
     /// <param name="context"></param>
     /// <param name="service"></param>
-    public ChatsController(Context context, OpenAIService service)
+    /// <param name="vectorRepository"></param>
+    public ChatsController(Context context, OpenAIService service, VectorRepository vectorRepository)
     {
         _context = context;
         _service = service;
+        _vectorRepository = vectorRepository;
     }
 
     /// <summary>
@@ -60,12 +64,32 @@ public class ChatsController : ControllerBase
             return NotFound();
         }
 
+        var embeddingResult = await _service.Embeddings.CreateEmbedding(new EmbeddingCreateRequest()
+        {
+            Model = "text-embedding-ada-002",
+            Input = dto.Message,
+        });
+        if (!embeddingResult.Successful)
+        {
+            return StatusCode(500, embeddingResult.Error);
+        }
+
+        List<double> queryVector = embeddingResult.Data.First().Embedding;
+
+        List<string> relatedDocuments = await _vectorRepository.Search(queryVector);
+
+        StringBuilder systemPromptBuilder = new("당신은 안동대학교 학생들의 질문에 대답해주는 아누봇입니다.");
+        foreach (string document in relatedDocuments)
+        {
+            systemPromptBuilder.AppendLine(document);
+        }
+
         var result = await _service.ChatCompletion.CreateCompletion(new ChatCompletionCreateRequest()
         {
             Model = "gpt-3.5-turbo",
             Messages = new List<ChatMessage>()
             {
-                ChatMessage.FromSystem("당신은 안동대학교 학생들의 질문에 대답해주는 아누봇입니다."),
+                ChatMessage.FromSystem(systemPromptBuilder.ToString()),
                 ChatMessage.FromUser(dto.Message),
             },
         });
