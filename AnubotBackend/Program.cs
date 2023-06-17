@@ -26,6 +26,9 @@ public class Program
                 serverVersion: ServerVersion.AutoDetect(builder.Configuration.GetConnectionString("DefaultConnection")));
         });
 
+        // 벡터 데이터베이스 의존성 등록
+        builder.Services.AddSingleton<VectorRepository>();
+
         // OpenAI 서비스 객체 등록
         builder.Services.AddSingleton(new OpenAIService(
             new OpenAiOptions()
