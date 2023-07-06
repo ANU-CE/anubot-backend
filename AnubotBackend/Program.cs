@@ -18,25 +18,28 @@ public class Program
     public static void Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
+        var services = builder.Services;
+        var configuration = builder.Configuration;
 
-        builder.Services.AddDbContext<Context>(options =>
+        // 데이터베이스 서비스 주입
+        services.AddDbContext<Context>(options =>
         {
-            options.UseMySql(
-                connectionString: builder.Configuration.GetConnectionString("DefaultConnection"),
-                serverVersion: ServerVersion.AutoDetect(builder.Configuration.GetConnectionString("DefaultConnection")));
+            string connectionString = configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("DefaultConnection is not set.");
+            options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString));
         });
 
-        // 벡터 데이터베이스 의존성 등록
-        builder.Services.AddSingleton<VectorRepository>();
+        // 벡터 데이터베이스 서비스 주입
+        services.AddSingleton<VectorRepository>();
 
-        // OpenAI 서비스 객체 등록
-        builder.Services.AddSingleton(new OpenAIService(
+        // OpenAI 서비스 주입
+        services.AddSingleton(new OpenAIService(
             new OpenAiOptions()
             {
-                ApiKey = builder.Configuration["OpenAI:ApiKey"] ?? throw new Exception("OpenAI:ApiKey is not set."),
+                ApiKey = configuration["OpenAI:ApiKey"] ?? throw new Exception("OpenAI:ApiKey is not set."),
             }));
 
-        builder.Services.AddControllers()
+        // JSON 직렬화 설정
+        services.AddControllers()
             .AddJsonOptions(options =>
             {
                 options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve;
@@ -44,7 +47,7 @@ public class Program
             });
 
         // CORS 관련 설정
-        builder.Services.AddCors(options =>
+        services.AddCors(options =>
         {
             options.AddDefaultPolicy(policy =>
             {
@@ -55,7 +58,7 @@ public class Program
         });
 
         // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-        builder.Services.AddSwaggerGen(options =>
+        services.AddSwaggerGen(options =>
         {
             options.SwaggerDoc("v1", new OpenApiInfo
             {
@@ -69,8 +72,10 @@ public class Program
 
         var app = builder.Build();
 
-        // Configure the HTTP request pipeline.
+        // Swagger 설정
         app.UseSwagger();
+
+        // SwaggerUI 설정
         app.UseSwaggerUI(options =>
         {
             options.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
