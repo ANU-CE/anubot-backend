@@ -21,6 +21,8 @@ public class Program
         var services = builder.Services;
         var configuration = builder.Configuration;
 
+        services.AddHealthChecks();
+
         // 데이터베이스 서비스 주입
         services.AddDbContext<Context>(options =>
         {
@@ -88,6 +90,8 @@ public class Program
 
         app.MapControllers();
 
+        app.MapHealthchecks("/healthz");
+        
         app.Run();
     }
 }
