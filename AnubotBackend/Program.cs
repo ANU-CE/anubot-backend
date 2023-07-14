@@ -4,6 +4,7 @@ using OpenAI;
 using OpenAI.Managers;
 using System.Reflection;
 using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Builder;
 
 namespace AnubotBackend;
 
@@ -90,7 +91,7 @@ public class Program
 
         app.MapControllers();
 
-        app.MapHealthchecks("/healthz");
+        app.MapHealthChecks("/healthz");
         
         app.Run();
     }
