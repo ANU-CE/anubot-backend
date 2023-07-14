@@ -11,6 +11,9 @@ https://anubot.azurewebsites.net
   - `appsettings.Production.json` - 운영
   - `appsettings.Development.json` - 개발 및 디버그
 
+# 배포
+* Jenkins
+
 ## 참고 문서
 * ASP.NET 공식 문서: https://learn.microsoft.com/ko-kr/aspnet/core/?view=aspnetcore-7.0
 * OpenAI API 공식 문서: https://platform.openai.com/docs/introduction
