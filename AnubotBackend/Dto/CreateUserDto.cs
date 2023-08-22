@@ -1,6 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-namespace AnubotBackend.Dto;
+﻿namespace AnubotBackend.Dto;
 
 /// <summary>
 /// 유저 개체 생성 요청 DTO
@@ -10,6 +8,10 @@ public class CreateUserDto
     /// <summary>
     /// 생성할 사용자의 이름
     /// </summary>
-    [Required(AllowEmptyStrings = false)]
-    public string UserName { get; set; } = null!;
+    public required string UserName { get; set; }
+
+    /// <summary>
+    /// Google ID 토큰
+    /// </summary>
+    public required string GoogleIdToken { get; set; }
 }

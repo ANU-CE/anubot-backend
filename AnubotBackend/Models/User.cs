@@ -21,6 +21,11 @@ public class User
     public ICollection<Chat> Chats { get; } = new List<Chat>();
 
     /// <summary>
+    /// 유저의 구글 ID
+    /// </summary>
+    public required string GoogleId { get; set; }
+
+    /// <summary>
     /// 유저 개체가 생성된 시각
     /// </summary>
     public DateTime CreatedDateTime { get; set; }
