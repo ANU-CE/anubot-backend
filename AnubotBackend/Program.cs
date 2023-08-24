@@ -1,8 +1,12 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using OpenAI;
 using OpenAI.Managers;
+using System.Configuration;
 using System.Reflection;
+using System.Text;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Builder;
 
@@ -27,9 +31,24 @@ public class Program
         // 데이터베이스 서비스 주입
         services.AddDbContext<Context>(options =>
         {
-            string connectionString = configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("DefaultConnection is not set.");
+            string connectionString = configuration.GetConnectionString("DefaultConnection") ?? throw new SettingsPropertyNotFoundException("DefaultConnection is not set.");
             options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString));
         });
+
+        services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            .AddJwtBearer(options =>
+            {
+                options.TokenValidationParameters = new TokenValidationParameters()
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = false,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    ValidIssuer = configuration["Jwt:Issuer"] ?? throw new SettingsPropertyNotFoundException("Jwt:Issuer is not set."),
+                    IssuerSigningKey = new SymmetricSecurityKey(
+                        Encoding.UTF8.GetBytes(configuration["Jwt:Key"] ?? throw new SettingsPropertyNotFoundException("Jwt:Key is not set.")))
+                };
+            });
 
         // 벡터 데이터베이스 서비스 주입
         services.AddSingleton<VectorRepository>();
@@ -87,6 +106,7 @@ public class Program
 
         app.UseHttpsRedirection();
 
+        app.UseAuthentication();
         app.UseAuthorization();
 
         app.MapControllers();

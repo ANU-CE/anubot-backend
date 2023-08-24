@@ -19,7 +19,6 @@ public class VectorRepository
     {
         _client.BaseAddress = new Uri(config["Qdrant:BaseUrl"] ?? throw new Exception("Qdrant:BaseUri is not set"));
         _client.DefaultRequestHeaders.Add("accept", "application/json");
-        _client.DefaultRequestHeaders.Add("api-key", config["Qdrant:ApiKey"] ?? throw new Exception("Qdrant:ApiKey is not set"));
     }
 
     /// <summary>
