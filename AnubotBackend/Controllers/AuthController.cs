@@ -32,6 +32,9 @@ public class AuthController : ControllerBase
     /// API를 호출할때 필요한 JWT를 생성합니다.
     /// </summary>
     /// <param name="googleIdToken">해당 유저의 Google id token</param>
+    /// <response code="200">Bearer json web token</response>
+    /// <response code="400">유효하지 않은 Google id token</response>
+    /// <response code="404">해당 Google id token으로 가입된 유저가 없음</response>
     [AllowAnonymous]
     [HttpPost]
     public ActionResult<string> GenerateToken(string googleIdToken)
