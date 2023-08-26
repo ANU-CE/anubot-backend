@@ -12,14 +12,8 @@ using Microsoft.AspNetCore.Builder;
 
 namespace AnubotBackend;
 
-/// <summary>
-/// æ∆¥©∫ø ∏ﬁ¿Œ ≈¨∑°Ω∫
-/// </summary>
 public class Program
 {
-    /// <summary>
-    /// æ÷«√∏Æƒ…¿Ãº«¿« ¡¯¿‘¡°
-    /// </summary>
     public static void Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
@@ -28,7 +22,7 @@ public class Program
 
         services.AddHealthChecks();
 
-        // µ•¿Ã≈Õ∫£¿ÃΩ∫ º≠∫ÒΩ∫ ¡÷¿‘
+        // Îç∞Ïù¥ÌÑ∞Î≤†Ïù¥Ïä§ ÏÑúÎπÑÏä§ Ï£ºÏûÖ
         services.AddDbContext<Context>(options =>
         {
             string connectionString = configuration.GetConnectionString("DefaultConnection") ?? throw new SettingsPropertyNotFoundException("DefaultConnection is not set.");
@@ -50,17 +44,17 @@ public class Program
                 };
             });
 
-        // ∫§≈Õ µ•¿Ã≈Õ∫£¿ÃΩ∫ º≠∫ÒΩ∫ ¡÷¿‘
+        // Î≤°ÌÑ∞ Îç∞Ïù¥ÌÑ∞Î≤†Ïù¥Ïä§ ÏÑúÎπÑÏä§ Ï£ºÏûÖ
         services.AddSingleton<VectorRepository>();
 
-        // OpenAI º≠∫ÒΩ∫ ¡÷¿‘
+        // OpenAI ÏÑúÎπÑÏä§ Ï£ºÏûÖ
         services.AddSingleton(new OpenAIService(
             new OpenAiOptions()
             {
                 ApiKey = configuration["OpenAI:ApiKey"] ?? throw new Exception("OpenAI:ApiKey is not set."),
             }));
 
-        // JSON ¡˜∑ƒ»≠ º≥¡§
+        // JSON ÏßÅÎ†¨Ìôî ÏÑ§Ï†ï
         services.AddControllers()
             .AddJsonOptions(options =>
             {
@@ -68,7 +62,7 @@ public class Program
                 options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter(allowIntegerValues: false));
             });
 
-        // CORS ∞¸∑√ º≥¡§
+        // CORS Í¥ÄÎ†® ÏÑ§Ï†ï
         services.AddCors(options =>
         {
             options.AddDefaultPolicy(policy =>
@@ -94,10 +88,10 @@ public class Program
 
         var app = builder.Build();
 
-        // Swagger º≥¡§
+        // Swagger ÏÑ§Ï†ï
         app.UseSwagger();
 
-        // SwaggerUI º≥¡§
+        // SwaggerUI ÏÑ§Ï†ï
         app.UseSwaggerUI(options =>
         {
             options.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
@@ -112,7 +106,7 @@ public class Program
         app.MapControllers();
 
         app.MapHealthChecks("/healthz");
-        
+
         app.Run();
     }
 }
