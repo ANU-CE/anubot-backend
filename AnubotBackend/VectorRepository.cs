@@ -41,7 +41,7 @@ public class VectorRepository
         JsonNode responseNode = JsonNode.Parse(jsonResponse)!;
 
         List<string> result = responseNode["result"]!.AsArray()
-                                                    .Select(point => point!["payload"]!["text"]!.ToString())
+                                                    .Select(point => point!["payload"]!["plain_text"]!.ToString())
                                                     .ToList();
 
         return result;
