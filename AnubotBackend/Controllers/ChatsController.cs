@@ -12,34 +12,39 @@ namespace AnubotBackend.Controllers;
 [Route("[controller]")]
 public class ChatsController : ControllerBase
 {
-    private readonly BingSearchEngine _searchEngine;
-    private readonly OpenAIService _service;
+    private readonly BingCustomSearch _bingCustomSearch;
+    private readonly OpenAIService _openAiService;
     private readonly VectorRepository _vectorRepository;
 
-    public ChatsController(BingSearchEngine searchEngine, OpenAIService service, VectorRepository vectorRepository)
+    public ChatsController(BingCustomSearch bingCustomSearch, OpenAIService openAiService, VectorRepository vectorRepository)
     {
-        _searchEngine = searchEngine;
-        _service = service;
+        _bingCustomSearch = bingCustomSearch;
+        _openAiService = openAiService;
         _vectorRepository = vectorRepository;
     }
 
-    [HttpPost("search-engine")]
-    public async Task<ActionResult<Chat>> ChatWithSearchEngine(CreateChatDto dto)
+    /// <summary>
+    /// Bing Custom Search를 사용하여 응답을 생성합니다.
+    /// </summary>
+    /// <param name="dto">대화 개체 생성 요청 DTO</param>
+    [HttpPost("Bing")]
+    public async Task<ActionResult<Chat>> ChatWithBing(CreateChatDto dto)
     {
-        string searchEngineQuery = await CreateBingQuery(dto.Message);
+        string bingQuery = await CreateBingQuery(dto.Message);
 
-        List<string> relatedDocuments = await _searchEngine.SearchAsync(searchEngineQuery);
+        List<string> relatedDocuments = await _bingCustomSearch.SearchAsync(bingQuery);
 
-        string systemPrompt = $"""
-            Use the provided documents delimited by '===' to answer the user's question.
-            If you don't know the answer, just answer 'I don't know'.
-            Response in Korean.
-            ===
-            {relatedDocuments[0]}
-            ===
-            """;
+        string systemPrompt =
+        $"""
+        Use the provided documents delimited by '===' to answer the user's question.
+        If you don't know the answer, just answer 'I don't know'.
+        You are fluent in Korean.
+        ===
+        {string.Join("\n", relatedDocuments)}
+        ===
+        """;
 
-        var response = await _service.ChatCompletion.CreateCompletion(new()
+        var response = await _openAiService.ChatCompletion.CreateCompletion(new()
         {
             Model = "gpt-3.5-turbo-16k",
             Messages = new List<ChatMessage>()
@@ -59,25 +64,21 @@ public class ChatsController : ControllerBase
     }
 
     /// <summary>
-    /// 대화 개체를 생성합니다.
+    /// 임베딩 기반 검색을 통해 응답을 생성합니다.
     /// </summary>
     /// <param name="dto">대화 개체 생성 요청 DTO</param>
-    [HttpPost("vector-db")]
-    public async Task<ActionResult<Chat>> Create(CreateChatDto dto)
+    [HttpPost("Vector")]
+    public async Task<ActionResult<Chat>> ChatWithVector(CreateChatDto dto)
     {
-        var embeddingResult = await _service.Embeddings.CreateEmbedding(new EmbeddingCreateRequest()
+        var embeddingResponse = await _openAiService.Embeddings.CreateEmbedding(new EmbeddingCreateRequest()
         {
             Model = "text-embedding-ada-002",
             Input = dto.Message,
         });
-        if (!embeddingResult.Successful)
-        {
-            return StatusCode(500, embeddingResult.Error);
-        }
 
-        List<double> queryVector = embeddingResult.Data.First().Embedding;
+        List<double> embedding = embeddingResponse.Data.First().Embedding;
 
-        List<string> relatedDocuments = await _vectorRepository.Search(queryVector);
+        List<string> relatedDocuments = await _vectorRepository.Search(embedding);
 
         StringBuilder systemPromptBuilder = new("당신은 안동대학교 학생들의 질문에 대답해주는 아누봇입니다.");
         foreach (string document in relatedDocuments)
@@ -85,7 +86,7 @@ public class ChatsController : ControllerBase
             systemPromptBuilder.AppendLine(document);
         }
 
-        var result = await _service.ChatCompletion.CreateCompletion(new ChatCompletionCreateRequest()
+        var response = await _openAiService.ChatCompletion.CreateCompletion(new ChatCompletionCreateRequest()
         {
             Model = "gpt-3.5-turbo",
             Messages = new List<ChatMessage>()
@@ -94,34 +95,31 @@ public class ChatsController : ControllerBase
                 ChatMessage.FromUser(dto.Message),
             },
         });
-        if (!result.Successful)
-        {
-            return StatusCode(500, result.Error);
-        }
 
-        var chat = new Chat()
+        Chat chat = new()
         {
             Message = dto.Message,
-            Reply = result.Choices.First().Message.Content
+            Reply = response.Choices.First().Message.Content
         };
 
         return Ok(chat);
     }
 
     /// <summary>
-    /// GPT 언어 모델을 사용하여, 사용자 프롬프트에 대응하는 검색 엔진 쿼리를 생성합니다.
+    /// GPT 언어 모델을 사용하여, 사용자 프롬프트에 대응하는 Bing 쿼리를 생성합니다.
     /// </summary>
     /// <param name="userPrompt">사용자 프롬프트</param>
     /// <returns>사용자 프롬프트에 대응하는 검색 엔진 쿼리</returns>
     private async Task<string> CreateBingQuery(string userPrompt)
     {
-        const string SYSTEM_PROMPT = """
-            You are good at using search engine.
-            You must extract search keyword matching to user's question.
-            Just answer with only a search keyword.
-            """;
+        const string SYSTEM_PROMPT =
+        """
+        Create a query for Bing Custom Search based on the user's prompt.
+        You can use advanced search options for precise search results.
+        Example: "컴퓨터교육과 연락처 알려줘" -> "컴퓨터교육과 연락처"
+        """;
 
-        var response = await _service.ChatCompletion.CreateCompletion(new ChatCompletionCreateRequest()
+        var response = await _openAiService.ChatCompletion.CreateCompletion(new()
         {
             Model = "gpt-3.5-turbo",
             Messages = new ChatMessage[]
@@ -132,6 +130,8 @@ public class ChatsController : ControllerBase
             Temperature = 0F,
         });
 
-        return response.Choices.First().Message.Content;
+        string query = response.Choices.First().Message.Content;
+
+        return query;
     }
 }

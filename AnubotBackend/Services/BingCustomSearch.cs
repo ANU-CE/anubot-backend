@@ -3,13 +3,13 @@ using System.Text.Json.Nodes;
 
 namespace AnubotBackend.Services;
 
-public class BingSearchEngine
+public class BingCustomSearch
 {
     private readonly HttpClient _apiClient;
     private readonly HttpClient _crawlingClient;
     private readonly string _customConfigurationId;
 
-    public BingSearchEngine(IConfiguration configuration)
+    public BingCustomSearch(IConfiguration configuration)
     {
         string apiKey = configuration["BingSearch:ApiKey"]
             ?? throw new Exception("BingSearch:ApiKey is not set.");
@@ -30,9 +30,6 @@ public class BingSearchEngine
     /// <summary>
     /// Bing 검색 엔진을 사용하여 주어진 질의에 대한 검색 결과를 가져옵니다.
     /// </summary>
-    /// <param name="query"></param>
-    /// <returns></returns>
-    /// <exception cref="Exception"></exception>
     public async Task<List<string>> SearchAsync(string query)
     {
         using HttpResponseMessage apiResponse = await _apiClient.GetAsync($"?customconfig={_customConfigurationId}&q={query}&mkt=ko-KR&count=1&setLang=ko-KR");
@@ -54,7 +51,6 @@ public class BingSearchEngine
             HtmlDocument htmlDocument = new();
             htmlDocument.LoadHtml(html);
 
-            // get body.innertext
             var body = htmlDocument.DocumentNode.SelectSingleNode("//body");
             string bodyText = body.InnerText;
             relatedDocuments.Add(bodyText);

@@ -20,7 +20,7 @@ public class Program
         // 벡터 데이터베이스 서비스 주입
         services.AddSingleton<VectorRepository>();
 
-        services.AddSingleton<BingSearchEngine>();
+        services.AddSingleton<BingCustomSearch>();
 
         // OpenAI 서비스 주입
         services.AddSingleton(new OpenAIService(
