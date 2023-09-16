@@ -32,15 +32,16 @@ public class ChatsController : ControllerBase
     {
         string bingQuery = await CreateBingQuery(dto.Message);
 
-        List<string> relatedDocuments = await _bingCustomSearch.SearchAsync(bingQuery);
+        string? relatedDocument = await _bingCustomSearch.SearchAsync(bingQuery);
 
         string systemPrompt =
         $"""
-        Use the provided documents delimited by '===' to answer the user's question.
-        If you don't know the answer, just answer 'I don't know'.
-        You are fluent in Korean.
+        당신은 안동대학교 학생들을 도와주는 인공지능 비서 아누봇입니다.
+        대화가 발생한 시각은 UTC 시간으로 {DateTime.UtcNow}입니다.
+        "==="로 구분된 부분을 참고하여 학생의 질문에 답변해주세요.
+        만약 답변이 불가능하다면 학생에게 다른 방법을 제시해주세요.
         ===
-        {string.Join("\n", relatedDocuments)}
+        {relatedDocument}
         ===
         """;
 
@@ -114,9 +115,7 @@ public class ChatsController : ControllerBase
     {
         const string SYSTEM_PROMPT =
         """
-        Create a query for Bing Custom Search based on the user's prompt.
-        You can use advanced search options for precise search results.
-        Example: "컴퓨터교육과 연락처 알려줘" -> "컴퓨터교육과 연락처"
+        사용자의 질문에 대한 참고자료를 찾기 위한 한 개의 검색어를 만드세요.
         """;
 
         var response = await _openAiService.ChatCompletion.CreateCompletion(new()
@@ -127,10 +126,13 @@ public class ChatsController : ControllerBase
                 ChatMessage.FromSystem(SYSTEM_PROMPT),
                 ChatMessage.FromUser(userPrompt),
             },
-            Temperature = 0F,
         });
 
         string query = response.Choices.First().Message.Content;
+
+        // GPT가 생성한 검색어의 경우 따옴표와 같은 연산자 때문에 검색 성능이 떨어지는 경우가 있습니다.
+        // 따라서 프로그램 상에서 따옴표 연산자를 제거합니다.
+        query = query.Replace("\"", string.Empty);
 
         return query;
     }
